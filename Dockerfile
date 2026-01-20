@@ -14,12 +14,8 @@ COPY . .
 # Set NODE_ENV for build
 ENV NODE_ENV=production
 
-# Build server only (skip problematic client build)
+# Build server
 RUN npm run build:server
-
-# Create a simple static client build
-RUN mkdir -p dist/client
-COPY public/index.html dist/client/
 
 # Remove dev dependencies after build
 RUN npm prune --production

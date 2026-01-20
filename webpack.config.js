@@ -25,7 +25,15 @@ module.exports = (env, argv) => {
       rules: [
         {
           test: /\.tsx?$/,
-          use: 'ts-loader',
+          use: {
+            loader: 'ts-loader',
+            options: {
+              transpileOnly: true, // Skip type checking for faster builds
+              compilerOptions: {
+                noEmit: false,
+              },
+            },
+          },
           exclude: /node_modules/,
         },
         {
@@ -64,5 +72,12 @@ module.exports = (env, argv) => {
       },
     },
     devtool: isProduction ? 'source-map' : 'eval-source-map',
+    stats: {
+      children: true, // Show child compilation stats
+      errorDetails: true, // Show detailed error information
+    },
+    performance: {
+      hints: false, // Disable performance hints for large bundles
+    },
   };
 };

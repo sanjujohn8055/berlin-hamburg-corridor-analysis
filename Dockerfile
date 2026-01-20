@@ -5,14 +5,21 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies (including dev dependencies for build)
 RUN npm ci
 
 # Copy source code
 COPY . .
 
-# Build the application
-RUN npm run build
+# Set NODE_ENV for build
+ENV NODE_ENV=production
+
+# Build the application with detailed error output
+RUN npm run build:server
+RUN npm run build:client -- --stats-children
+
+# Remove dev dependencies after build
+RUN npm prune --production
 
 # Expose port
 EXPOSE $PORT

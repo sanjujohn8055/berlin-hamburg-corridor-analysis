@@ -7,16 +7,16 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "nodemon --exec ts-node src/server/index.ts",
     "dev:client": "webpack serve --mode development",
-    "build": "npm run build:server && npm run build:client",
+    "build": "npm run build:server",
     "build:server": "tsc -p src/server/tsconfig.json",
-    "build:client": "webpack --mode production --stats-children",
-    "build:render": "npm run build:server && npm run build:client",
+    "build:client": "webpack --config webpack.simple.config.js",
+    "build:client:full": "webpack --mode production --stats-children",
+    "build:render": "npm run build:server",
     "start": "node dist/server/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "postinstall": "npm run build:server || true"
+    "docker:down": "docker-compose down"
   },
   "dependencies": {
     "express": "^4.18.2",

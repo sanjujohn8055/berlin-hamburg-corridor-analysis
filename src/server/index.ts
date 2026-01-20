@@ -85,7 +85,55 @@ app.use('/api/risk-zones', riskZonesRouter);
 // Catch-all handler for React app in production
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/index.html'));
+    const clientPath = path.join(__dirname, '../client/index.html');
+    const fs = require('fs');
+    
+    if (fs.existsSync(clientPath)) {
+      res.sendFile(clientPath);
+    } else {
+      // Simple fallback HTML when React build isn't available
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Berlin-Hamburg Corridor Analysis</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; background: #f5f7fa; }
+            .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+            h1 { color: #4A90E2; }
+            .api-link { display: inline-block; margin: 10px 0; padding: 10px 15px; background: #4A90E2; color: white; text-decoration: none; border-radius: 4px; }
+            .api-link:hover { background: #357ABD; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>🚄 Berlin-Hamburg Corridor Analysis</h1>
+            <p>Welcome to the Berlin-Hamburg Railway Corridor Analysis System!</p>
+            <p><strong>Status:</strong> Backend API is running successfully!</p>
+            
+            <h3>Available API Endpoints:</h3>
+            <a href="/api/health" class="api-link">Health Check</a>
+            <a href="/api/stations" class="api-link">Stations Data</a>
+            <a href="/api/priorities/analysis" class="api-link">Priority Analysis</a>
+            <a href="/api/config/default" class="api-link">Configuration</a>
+            <a href="/api/risk-zones" class="api-link">Risk Zones</a>
+            
+            <h3>System Features:</h3>
+            <ul>
+              <li>✅ <strong>Station Management</strong> - Complete database of 13 corridor stations</li>
+              <li>✅ <strong>Priority Analysis Engine</strong> - Multi-criteria decision support</li>
+              <li>✅ <strong>Risk Zone Management</strong> - Population-traffic assessment</li>
+              <li>✅ <strong>REST API</strong> - Complete backend endpoints</li>
+              <li>✅ <strong>Real-time Data</strong> - Live corridor analysis</li>
+            </ul>
+            
+            <p><em>The React frontend will be available in future deployments.</em></p>
+            <p>For now, you can interact with the system via the API endpoints above.</p>
+          </div>
+        </body>
+        </html>
+      `);
+    }
   });
 }
 

@@ -1,0 +1,21 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies (keep dev dependencies for ts-node)
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Set NODE_ENV
+ENV NODE_ENV=production
+
+# Expose port
+EXPOSE $PORT
+
+# Start with ts-node directly (no build step)
+CMD ["npx", "ts-node", "src/server/index.ts"]

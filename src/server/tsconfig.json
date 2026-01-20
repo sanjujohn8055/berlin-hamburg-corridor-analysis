@@ -13,13 +13,13 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "baseUrl": ".",
+    "baseUrl": "..",
     "paths": {
-      "@shared/*": ["../shared/*"]
+      "@shared/*": ["shared/*"]
     }
   },
   "include": [
-    "**/*",
+    "server/**/*",
     "../shared/**/*"
   ],
   "exclude": [

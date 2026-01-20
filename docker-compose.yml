@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: corridor-postgres
+    environment:
+      POSTGRES_DB: corridor_analysis
+      POSTGRES_USER: corridor_user
+      POSTGRES_PASSWORD: corridor_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - corridor-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: corridor-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - corridor-network
+
+  app:
+    build: .
+    container_name: corridor-app
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://corridor_user:corridor_pass@postgres:5432/corridor_analysis
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - corridor-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  corridor-network:
+    driver: bridge

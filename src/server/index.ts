@@ -164,10 +164,25 @@ async function startServer() {
     }
     logger.info('Database connected successfully');
     
-    // Initialize cache service
+    // Initialize cache service (optional - graceful fallback if Redis not available)
     cacheService = new CacheService();
-    await cacheService.connect();
-    logger.info('Cache service connected successfully');
+    try {
+      await cacheService.connect();
+      logger.info('Cache service connected successfully');
+    } catch (error) {
+      logger.warn('Cache service not available, continuing without Redis:', error);
+      // Create a mock cache service that doesn't actually cache
+      cacheService = {
+        connect: async () => {},
+        get: async () => null,
+        set: async () => {},
+        delete: async () => {},
+        deletePattern: async () => {},
+        isAvailable: () => false,
+        getStats: async () => ({ connected: false }),
+        close: async () => {}
+      } as any;
+    }
     
     // Start the server
     app.listen(PORT, () => {
@@ -191,7 +206,7 @@ process.on('SIGTERM', async () => {
       await dbService.close();
     }
     
-    if (cacheService) {
+    if (cacheService && cacheService.close) {
       await cacheService.close();
     }
     
@@ -211,7 +226,7 @@ process.on('SIGINT', async () => {
       await dbService.close();
     }
     
-    if (cacheService) {
+    if (cacheService && cacheService.close) {
       await cacheService.close();
     }
     

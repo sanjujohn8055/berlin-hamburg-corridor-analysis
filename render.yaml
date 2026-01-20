@@ -13,11 +13,6 @@ services:
         fromDatabase:
           name: corridor-postgres
           property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: corridor-redis
-          property: connectionString
       - key: PORT
         value: 10000
 
@@ -25,7 +20,4 @@ databases:
   - name: corridor-postgres
     databaseName: corridor_analysis
     user: corridor_user
-    plan: starter
-
-  - name: corridor-redis
     plan: starter

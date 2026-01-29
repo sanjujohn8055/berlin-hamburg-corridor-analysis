@@ -1,19 +1,21 @@
 # Deutsche Bahn GTFS Data
 
-This folder contains Deutsche Bahn GTFS (General Transit Feed Specification) data for the Berlin-Hamburg corridor.
+This folder contains Deutsche Bahn GTFS (General Transit Feed Specification) data for the Berlin-Hamburg corridor, stored using Git LFS for efficient handling of large files.
 
 ## 📁 Structure
 
 ```
 deutsche-bahn-gtfs/
-├── gtfs-files/          # GTFS text files (excluded from git due to size)
-│   ├── agency.txt       # Transit agencies
-│   ├── routes.txt       # Train routes (ICE, RE, etc.)
-│   ├── trips.txt        # Individual trip instances
-│   ├── stops.txt        # Station information
-│   ├── stop_times.txt   # Schedule data (large file ~1GB)
-│   ├── calendar.txt     # Service calendar
-│   └── ...              # Other GTFS files
+├── gtfs-files/          # GTFS text files (managed by Git LFS)
+│   ├── agency.txt       # Transit agencies (small)
+│   ├── routes.txt       # Train routes (ICE, RE, etc.) (small)
+│   ├── trips.txt        # Individual trip instances (medium)
+│   ├── stops.txt        # Station information (small)
+│   ├── stop_times.txt   # Schedule data (large ~1GB) 🔄 Git LFS
+│   ├── calendar.txt     # Service calendar (small)
+│   ├── calendar_dates.txt # Service exceptions (small)
+│   ├── feed_info.txt    # Feed metadata (small)
+│   └── attributions.txt # Data attributions (small)
 └── README.md           # This file
 ```
 
@@ -42,33 +44,55 @@ The application uses this data through:
 
 ## 🔧 Setup Instructions
 
-### Option 1: Download GTFS Data (Recommended)
+### ✅ **GTFS Files Included (Git LFS)**
 
-1. Download Deutsche Bahn GTFS data from official source
-2. Extract files to `deutsche-bahn-gtfs/gtfs-files/`
-3. Restart the application to load real data
+The GTFS files are now included in the repository using Git LFS:
 
-### Option 2: Use Without GTFS (Fallback)
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/sanjujohn8055/berlin-hamburg-corridor-analysis.git
+   cd berlin-hamburg-corridor-analysis
+   ```
 
-The application works without GTFS files by using:
-- Research-based real train data
-- Validated route information
-- Realistic schedule patterns
+2. **Git LFS will automatically download the files:**
+   ```bash
+   git lfs pull  # If needed
+   ```
+
+3. **Start the application:**
+   ```bash
+   node real-time-api-server.js
+   ```
+
+4. **Verify GTFS data loading:**
+   - Check console for "✅ Loaded X real trains from GTFS data"
+   - Visit http://localhost:3000/api/health for data source status
+
+### 🔄 **Git LFS Configuration**
+
+The repository uses Git LFS to handle large GTFS files:
+
+```bash
+# Files tracked by Git LFS
+deutsche-bahn-gtfs/gtfs-files/*.txt
+
+# Large files (>100MB) are stored efficiently
+# stop_times.txt (~1GB) is handled seamlessly
+```
 
 ## 📝 File Descriptions
 
-| File | Description | Size | Required |
-|------|-------------|------|----------|
-| `agency.txt` | Transit agency info | Small | Yes |
-| `routes.txt` | Train route definitions | Small | Yes |
-| `trips.txt` | Trip instances | Medium | Yes |
-| `stops.txt` | Station information | Small | Yes |
-| `stop_times.txt` | Schedule data | Large (~1GB) | Optional* |
-| `calendar.txt` | Service calendar | Small | Yes |
-| `calendar_dates.txt` | Service exceptions | Small | Optional |
-| `feed_info.txt` | Feed metadata | Small | Optional |
-
-*The application includes fallback data for stop_times.txt due to its large size.
+| File | Description | Size | Git LFS |
+|------|-------------|------|---------|
+| `agency.txt` | Transit agency info | 1KB | No |
+| `routes.txt` | Train route definitions | 15KB | No |
+| `trips.txt` | Trip instances | 2MB | Yes |
+| `stops.txt` | Station information | 500KB | No |
+| `stop_times.txt` | Schedule data | ~1GB | Yes ✅ |
+| `calendar.txt` | Service calendar | 5KB | No |
+| `calendar_dates.txt` | Service exceptions | 100KB | No |
+| `feed_info.txt` | Feed metadata | 1KB | No |
+| `attributions.txt` | Data attributions | 1KB | No |
 
 ## 🚧 Construction Impact (2026)
 
@@ -88,14 +112,38 @@ The parser validates:
 - ✅ Routes connect Berlin-Hamburg
 - ✅ Schedules are realistic
 
+## 📊 Real Data Benefits
+
+With GTFS files included, you get:
+
+- **Authentic Train Numbers:** Real ICE 18, ICE 23, ICE 28
+- **Official Schedules:** Actual Deutsche Bahn departure/arrival times
+- **Real Station Data:** Correct EVA codes and coordinates
+- **Service Patterns:** Accurate frequency and routing
+- **Construction Modeling:** Realistic 2026 impact simulation
+
 ## 📞 Support
 
 If you need help with GTFS data:
 1. Check the application logs for parsing errors
-2. Verify file formats match GTFS specification
-3. Ensure files are UTF-8 encoded
-4. Contact Deutsche Bahn for official data access
+2. Verify Git LFS is installed: `git lfs --version`
+3. Pull LFS files if needed: `git lfs pull`
+4. Ensure files are UTF-8 encoded
+5. Contact Deutsche Bahn for official data access
+
+## 🔄 Updating GTFS Data
+
+To update with newer GTFS data:
+
+1. **Replace files in `deutsche-bahn-gtfs/gtfs-files/`**
+2. **Add and commit:**
+   ```bash
+   git add deutsche-bahn-gtfs/gtfs-files/
+   git commit -m "update: GTFS data to latest version"
+   git push origin main
+   ```
+3. **Git LFS handles large files automatically**
 
 ---
 
-**Note:** GTFS files are excluded from git due to size constraints. The application includes fallback data to ensure functionality without requiring large file downloads.
+**✅ GTFS files are now included in the repository using Git LFS for optimal performance and full project functionality with authentic Deutsche Bahn data!**

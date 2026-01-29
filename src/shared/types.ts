@@ -10,6 +10,63 @@ export interface CorridorStation {
   facilities: StationFacilities;
   upgradePriority: number; // 0-100
   isStrategicHub: boolean;
+  suggestions?: string[]; // Actionable improvement suggestions
+  congestionReasons?: string[]; // Real-time congestion analysis
+  realTimeData?: RealTimeStationData; // Live operational data
+  dataSource?: 'real-api' | 'enhanced-mock';
+}
+
+export interface Train {
+  trainNumber: string;
+  trainType: string;
+  operator: string;
+  route: string;
+  frequency: string;
+  journey: TrainStop[];
+  constructionImpact?: boolean;
+  busReplacement?: string[];
+  line?: string;
+  realTimeStatus?: {
+    overallDelay: number;
+    status: 'on-time' | 'minor-delay' | 'delayed';
+    lastUpdated: string;
+    stops: TrainStop[];
+    reliability: number;
+    passengerLoad: number;
+  };
+  delayHistory?: Array<{
+    date: string;
+    avgDelay: number;
+    onTimePerformance: number;
+    cancellations: number;
+  }>;
+  nextDepartures?: Array<{
+    scheduledTime: string;
+    estimatedDelay: number;
+    platform: string;
+    status: string;
+  }>;
+}
+
+export interface TrainStop {
+  station: string;
+  eva: number;
+  scheduledDeparture: string | null;
+  scheduledArrival: string | null;
+  actualDeparture?: string | null;
+  actualArrival?: string | null;
+  delay?: number;
+  status?: 'on-time' | 'minor-delay' | 'delayed';
+  platform: string;
+}
+
+export interface RealTimeStationData {
+  avgDelay: number; // Average delay in minutes
+  delayedTrains: number; // Number of delayed trains
+  cancelledTrains: number; // Number of cancelled trains
+  platformChanges: number; // Number of platform changes
+  totalDepartures: number; // Total departures in time window
+  lastUpdated: string; // ISO timestamp
 }
 
 export interface StationFacilities {

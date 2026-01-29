@@ -1,34 +1,112 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CorridorMap } from './CorridorMap';
 import { useCorridorMap } from '../hooks/useCorridorMap';
 import { CorridorStation } from '../shared/types';
+import { StationDataService } from '../services/StationDataService';
 
 /**
  * Main corridor dashboard component combining map visualization with controls and information panels
  */
-export const CorridorDashboard: React.FC = () => {
+interface CorridorDashboardProps {
+  onNavigate?: (page: 'delay-analysis' | 'alternative-routes' | 'backup-stations') => void;
+}
+
+export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate }) => {
   const {
     stations,
     selectedStation,
-    zoomLevel,
     loading,
     error,
     showPriorityColors,
     showRiskZones,
     lastUpdated,
+    dataSource,
+    apiStatus,
     selectStation,
-    setZoomLevel,
     togglePriorityColors,
     toggleRiskZones,
     refresh,
     getStationsByPriority,
     getCorridorStats
-  } = useCorridorMap({ autoRefresh: true, refreshInterval: 60000 });
+  } = useCorridorMap({ autoRefresh: true, refreshInterval: 30000 }); // Refresh every 30 seconds for real-time
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'priorities' | 'details'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'priorities' | 'details' | 'realtime'>('realtime');
+  const [alternativeRoutes, setAlternativeRoutes] = useState<any[]>([]);
+  const [backupStations, setBackupStations] = useState<any[]>([]);
+  const [loadingRoutes, setLoadingRoutes] = useState(false);
 
   const corridorStats = getCorridorStats();
   const topPriorityStations = getStationsByPriority(60);
+  const stationDataService = StationDataService.getInstance();
+
+  // Fetch alternative routes when stations change
+  useEffect(() => {
+    if (stations.length >= 2) {
+      fetchAlternativeData();
+    }
+  }, [stations]);
+
+  const fetchAlternativeData = async () => {
+    setLoadingRoutes(true);
+    try {
+      // Fetch backup stations
+      const backup = await stationDataService.fetchBackupStations();
+      setBackupStations(backup);
+
+      // Fetch alternative routes between Berlin and Hamburg
+      if (stations.length >= 2) {
+        const berlinStation = stations.find(s => s.name.includes('Berlin'));
+        const hamburgStation = stations.find(s => s.name.includes('Hamburg'));
+        
+        if (berlinStation && hamburgStation) {
+          const routes = await stationDataService.fetchAlternativeRoutes(
+            berlinStation.eva.toString(), 
+            hamburgStation.eva.toString()
+          );
+          setAlternativeRoutes(routes);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching alternative data:', error);
+    } finally {
+      setLoadingRoutes(false);
+    }
+  };
+
+  // Calculate real-time statistics
+  const getRealTimeStats = () => {
+    if (!stations.length) return null;
+    
+    const totalDelays = stations.reduce((sum, station) => 
+      sum + (station.realTimeData?.avgDelay || 0), 0);
+    const avgDelay = Math.round(totalDelays / stations.length);
+    const delayedStations = stations.filter(s => (s.realTimeData?.avgDelay || 0) > 5).length;
+    const criticalStations = stations.filter(s => (s.realTimeData?.avgDelay || 0) > 15).length;
+    
+    return {
+      avgDelay,
+      delayedStations,
+      criticalStations,
+      totalStations: stations.length
+    };
+  };
+
+  const realTimeStats = getRealTimeStats();
+
+  // Helper function to get delay class for styling
+  const getDelayClass = (delay: number) => {
+    if (delay > 15) return 'critical';
+    if (delay > 5) return 'moderate';
+    return 'minimal';
+  };
+
+  // Helper function to get priority class for styling
+  const getPriorityClass = (priority: number) => {
+    if (priority >= 80) return 'critical';
+    if (priority >= 60) return 'high';
+    if (priority >= 40) return 'medium';
+    return 'low';
+  };
 
   if (loading && stations.length === 0) {
     return (
@@ -92,7 +170,32 @@ export const CorridorDashboard: React.FC = () => {
         )}
       </header>
 
-      <div className="dashboard-content">
+        <div className="dashboard-content">
+        {/* Real-time Status Panel */}
+        {realTimeStats && dataSource === 'real-api' && (
+          <div className="realtime-status-panel">
+            <h3>🔴 LIVE Real-Time Status</h3>
+            <div className="realtime-stats">
+              <div className="realtime-stat">
+                <span className="stat-value">{realTimeStats.avgDelay}min</span>
+                <span className="stat-label">Avg Delay</span>
+              </div>
+              <div className="realtime-stat">
+                <span className="stat-value">{realTimeStats.delayedStations}</span>
+                <span className="stat-label">Delayed Stations</span>
+              </div>
+              <div className="realtime-stat critical">
+                <span className="stat-value">{realTimeStats.criticalStations}</span>
+                <span className="stat-label">Critical (&gt;15min)</span>
+              </div>
+              <div className="realtime-stat">
+                <span className="stat-value">{apiStatus.stada && apiStatus.timetables ? '🟢' : '🔴'}</span>
+                <span className="stat-label">API Status</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Corridor Statistics */}
         {corridorStats && (
           <div className="stats-panel">
@@ -130,13 +233,19 @@ export const CorridorDashboard: React.FC = () => {
           onStationClick={selectStation}
           showPriorityColors={showPriorityColors}
           showRiskZones={showRiskZones}
-          zoomLevel={zoomLevel}
-          onZoomChange={setZoomLevel}
+          dataSource={dataSource}
+          apiStatus={apiStatus}
         />
 
         {/* Information Panels */}
         <div className="info-panels">
           <div className="panel-tabs">
+            <button
+              className={`tab-button ${activeTab === 'realtime' ? 'active' : ''}`}
+              onClick={() => setActiveTab('realtime')}
+            >
+              🔴 Real-Time
+            </button>
             <button
               className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
               onClick={() => setActiveTab('overview')}
@@ -158,6 +267,143 @@ export const CorridorDashboard: React.FC = () => {
           </div>
 
           <div className="panel-content">
+            {activeTab === 'realtime' && (
+              <div className="realtime-panel">
+                <h3>🔴 Live Operations Status</h3>
+                
+                {dataSource === 'real-api' ? (
+                  <>
+                    <div className="realtime-overview">
+                      <div className="realtime-metric">
+                        <span className="metric-value">{realTimeStats?.avgDelay || 0}min</span>
+                        <span className="metric-label">Average Delay</span>
+                      </div>
+                      <div className="realtime-metric">
+                        <span className="metric-value">{realTimeStats?.delayedStations || 0}</span>
+                        <span className="metric-label">Stations with Delays</span>
+                      </div>
+                      <div className="realtime-metric critical">
+                        <span className="metric-value">{realTimeStats?.criticalStations || 0}</span>
+                        <span className="metric-label">Critical Delays (&gt;15min)</span>
+                      </div>
+                    </div>
+
+                    {/* Live Operation Status Action Buttons */}
+                    <div className="live-operation-actions">
+                      <h4>📊 Live Operation Analysis</h4>
+                      <div className="operation-buttons">
+                        <button 
+                          onClick={() => onNavigate?.('delay-analysis')}
+                          className="operation-btn delay-analysis-btn"
+                          aria-label="View detailed delay analysis and performance metrics"
+                        >
+                          <span className="btn-icon">📈</span>
+                          <div className="btn-content">
+                            <span className="btn-title">Delay Analysis</span>
+                            <span className="btn-description">View comprehensive delay patterns, peak times, and performance metrics across the Berlin-Hamburg corridor</span>
+                          </div>
+                        </button>
+                        
+                        <button 
+                          onClick={() => onNavigate?.('alternative-routes')}
+                          className="operation-btn alternative-routes-btn"
+                          aria-label="Find alternative routes and emergency connections"
+                        >
+                          <span className="btn-icon">🔄</span>
+                          <div className="btn-content">
+                            <span className="btn-title">Alternative Routes</span>
+                            <span className="btn-description">Access backup routing options, emergency procedures, and construction period alternatives</span>
+                          </div>
+                        </button>
+                        
+                        <button 
+                          onClick={() => onNavigate?.('backup-stations')}
+                          className="operation-btn backup-stations-btn"
+                          aria-label="Access backup stations for congestion relief"
+                        >
+                          <span className="btn-icon">🏢</span>
+                          <div className="btn-content">
+                            <span className="btn-title">Backup Stations</span>
+                            <span className="btn-description">Explore alternative stations, facilities overview, and congestion relief options during disruptions</span>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="station-status-list">
+                      {stations.map((station) => (
+                        <div key={station.eva} className="station-status-item">
+                          <div className="station-status-header">
+                            <span className="station-name">{station.name}</span>
+                            <div className="status-indicators">
+                              <span className={`delay-indicator ${getDelayClass(station.realTimeData?.avgDelay || 0)}`}>
+                                {station.realTimeData?.avgDelay || 0}min
+                              </span>
+                              {(station.realTimeData?.cancelledTrains || 0) > 0 && (
+                                <span className="cancellation-indicator">
+                                  {station.realTimeData?.cancelledTrains} cancelled
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {station.congestionReasons && station.congestionReasons.length > 0 && (
+                            <div className="congestion-reasons">
+                              <strong>Current Issues:</strong>
+                              <ul>
+                                {station.congestionReasons.slice(0, 2).map((reason, idx) => (
+                                  <li key={idx}>{reason}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          <div className="realtime-actions">
+                            <button 
+                              onClick={() => selectStation(station)}
+                              className="view-details-btn"
+                            >
+                              View Details
+                            </button>
+                            {station.realTimeData?.avgDelay && station.realTimeData.avgDelay > 10 && (
+                              <button 
+                                onClick={() => fetchAlternativeData()}
+                                className="find-alternatives-btn"
+                                disabled={loadingRoutes}
+                              >
+                                {loadingRoutes ? 'Loading...' : 'Find Alternatives'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {backupStations.length > 0 && (
+                      <div className="backup-stations-section">
+                        <h4>🔄 Alternative Stations for Congestion Relief</h4>
+                        <div className="backup-stations-list">
+                          {backupStations.map((station) => (
+                            <div key={station.eva} className="backup-station-item">
+                              <span className="backup-station-name">{station.name}</span>
+                              <span className="backup-station-delay">
+                                {station.realTimeData?.avgDelay || 0}min delay
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="realtime-unavailable">
+                    <p>⚠️ Real-time data not available. Using enhanced mock data.</p>
+                    <p>Configure real API credentials to access live operational data.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {activeTab === 'overview' && (
               <div className="overview-panel">
                 <h3>Corridor Overview</h3>
@@ -314,6 +560,92 @@ export const CorridorDashboard: React.FC = () => {
         .view-toggles {
           display: flex;
           gap: 15px;
+        }
+
+        .toggle-label {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 14px;
+          cursor: pointer;
+        }
+
+        .refresh-button {
+          padding: 8px 16px;
+          background: #4A90E2;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+        }
+
+        .refresh-button:hover:not(:disabled) {
+          background: #357ABD;
+        }
+
+        .refresh-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .last-updated {
+          text-align: center;
+          font-size: 12px;
+          color: #666;
+          margin-top: 10px;
+        }
+
+        .dashboard-content {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+
+        /* Real-time Status Panel */
+        .realtime-status-panel {
+          background: linear-gradient(135deg, #ff4444, #ff6b6b);
+          color: white;
+          padding: 20px;
+          border-radius: 8px;
+          margin-bottom: 20px;
+          box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
+        }
+
+        .realtime-status-panel h3 {
+          margin: 0 0 15px 0;
+          font-size: 1.2rem;
+        }
+
+        .realtime-stats {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 15px;
+        }
+
+        .realtime-stat {
+          text-align: center;
+          background: rgba(255, 255, 255, 0.1);
+          padding: 15px;
+          border-radius: 6px;
+        }
+
+        .realtime-stat.critical {
+          background: rgba(255, 255, 255, 0.2);
+          border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .realtime-stat .stat-value {
+          display: block;
+          font-size: 1.8rem;
+          font-weight: bold;
+          margin-bottom: 5px;
+        }
+
+        .realtime-stat .stat-label {
+          font-size: 0.9rem;
+          opacity: 0.9;
+        }
         }
 
         .toggle-label {
@@ -614,6 +946,20 @@ const StationDetailsPanel: React.FC<{ station: CorridorStation }> = ({ station }
         </div>
       </div>
 
+      {/* Actionable Suggestions */}
+      {station.suggestions && station.suggestions.length > 0 && (
+        <div className="suggestions-section">
+          <h4>🎯 Actionable Improvement Suggestions</h4>
+          <div className="suggestions-list">
+            {station.suggestions.map((suggestion, index) => (
+              <div key={index} className="suggestion-item">
+                <span className="suggestion-text">{suggestion}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <style>{`
         .station-details {
           max-width: 600px;
@@ -703,6 +1049,37 @@ const StationDetailsPanel: React.FC<{ station: CorridorStation }> = ({ station }
           gap: 8px;
           margin-bottom: 15px;
         }
+
+        .suggestions-section {
+          margin-top: 25px;
+          padding-top: 20px;
+          border-top: 2px solid #f0f0f0;
+        }
+
+        .suggestions-section h4 {
+          color: #4A90E2;
+          margin-bottom: 15px;
+          font-size: 1.1rem;
+        }
+
+        .suggestions-list {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .suggestion-item {
+          background: #f8f9fa;
+          padding: 12px;
+          border-radius: 6px;
+          border-left: 4px solid #4A90E2;
+        }
+
+        .suggestion-text {
+          font-size: 14px;
+          color: #333;
+          line-height: 1.4;
+        }
       `}</style>
     </div>
   );
@@ -741,6 +1118,402 @@ const FacilityItem: React.FC<{ label: string; available: boolean }> = ({ label, 
 
       .facility-status.unavailable {
         color: #FF4444;
+      }
+
+      /* Real-time Panel Styles */
+      .realtime-panel {
+        padding: 20px;
+      }
+
+      .realtime-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+      }
+
+      .realtime-metric {
+        text-align: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        border-left: 4px solid #4A90E2;
+      }
+
+      .realtime-metric.critical {
+        border-left-color: #FF4444;
+        background: #fff5f5;
+      }
+
+      .realtime-metric .metric-value {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+      }
+
+      .realtime-metric .metric-label {
+        font-size: 0.85rem;
+        color: #666;
+      }
+
+      .station-status-list {
+        space-y: 15px;
+      }
+
+      .station-status-item {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+      }
+
+      .station-status-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .station-name {
+        font-weight: bold;
+        color: #333;
+      }
+
+      .status-indicators {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .delay-indicator {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: bold;
+      }
+
+      .delay-indicator.minimal {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .delay-indicator.moderate {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .delay-indicator.critical {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .cancellation-indicator {
+        background: #ff4444;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+      }
+
+      .congestion-reasons {
+        margin: 10px 0;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 4px;
+      }
+
+      .congestion-reasons ul {
+        margin: 5px 0 0 0;
+        padding-left: 20px;
+      }
+
+      .congestion-reasons li {
+        margin: 3px 0;
+        font-size: 0.9rem;
+      }
+
+      .realtime-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .view-details-btn, .find-alternatives-btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.85rem;
+      }
+
+      .view-details-btn {
+        background: #4A90E2;
+        color: white;
+      }
+
+      .find-alternatives-btn {
+        background: #ff8800;
+        color: white;
+      }
+
+      .view-details-btn:hover {
+        background: #357ABD;
+      }
+
+      .find-alternatives-btn:hover:not(:disabled) {
+        background: #e67700;
+      }
+
+      .find-alternatives-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .backup-stations-section {
+        margin-top: 25px;
+        padding: 15px;
+        background: #f0f8ff;
+        border-radius: 6px;
+        border-left: 4px solid #4A90E2;
+      }
+
+      .backup-stations-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .backup-station-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        background: white;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
+
+      .backup-station-name {
+        font-weight: 500;
+      }
+
+      .backup-station-delay {
+        font-size: 0.85rem;
+        color: #666;
+      }
+
+      .realtime-unavailable {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+      }
+
+      .realtime-unavailable p {
+        margin: 10px 0;
+      }
+
+      /* Live Operation Actions Styles */
+      .live-operation-actions {
+        margin: 25px 0;
+        padding: 25px;
+        background: linear-gradient(135deg, #f8f9fa, #ffffff);
+        border-radius: 12px;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .live-operation-actions h4 {
+        margin: 0 0 20px 0;
+        color: #2c3e50;
+        font-size: 1.2rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .operation-buttons {
+        display: flex;
+        justify-content: space-between;
+        gap: 2rem;
+        margin-top: 20px;
+      }
+
+      .operation-btn {
+        display: flex;
+        align-items: flex-start;
+        gap: 18px;
+        padding: 24px 20px;
+        background: linear-gradient(135deg, #ffffff, #f8f9fa);
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-align: left;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        flex: 1;
+        min-height: 120px;
+      }
+
+      .operation-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #4A90E2, transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+      }
+
+      .operation-btn:hover::before {
+        transform: translateX(100%);
+      }
+
+      .operation-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(74, 144, 226, 0.15);
+        border-color: #4A90E2;
+        background: linear-gradient(135deg, #ffffff, #f0f8ff);
+      }
+
+      .operation-btn:active {
+        transform: translateY(-1px);
+        transition: all 0.1s ease;
+      }
+
+      .operation-btn .btn-icon {
+        font-size: 2.2rem;
+        flex-shrink: 0;
+        transition: transform 0.3s ease;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+      }
+
+      .operation-btn:hover .btn-icon {
+        transform: scale(1.1);
+      }
+
+      .operation-btn .btn-content {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+        line-height: 1.4;
+      }
+
+      .operation-btn .btn-title {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 1.1rem;
+        margin-bottom: 4px;
+        transition: color 0.3s ease;
+        line-height: 1.3;
+      }
+
+      .operation-btn .btn-description {
+        color: #6c757d;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        transition: color 0.3s ease;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-height: 4.5em;
+      }
+
+      .operation-btn:hover .btn-title {
+        color: #1a252f;
+      }
+
+      .operation-btn:hover .btn-description {
+        color: #495057;
+      }
+
+      /* Individual button hover effects */
+      .delay-analysis-btn:hover {
+        border-color: #28a745;
+        background: linear-gradient(135deg, #ffffff, #f0fff4);
+      }
+
+      .delay-analysis-btn:hover .btn-icon {
+        color: #28a745;
+      }
+
+      .delay-analysis-btn:hover::before {
+        background: linear-gradient(90deg, transparent, #28a745, transparent);
+      }
+
+      .alternative-routes-btn:hover {
+        border-color: #ffc107;
+        background: linear-gradient(135deg, #ffffff, #fffbf0);
+      }
+
+      .alternative-routes-btn:hover .btn-icon {
+        color: #ffc107;
+      }
+
+      .alternative-routes-btn:hover::before {
+        background: linear-gradient(90deg, transparent, #ffc107, transparent);
+      }
+
+      .backup-stations-btn:hover {
+        border-color: #17a2b8;
+        background: linear-gradient(135deg, #ffffff, #f0fdff);
+      }
+
+      .backup-stations-btn:hover .btn-icon {
+        color: #17a2b8;
+      }
+
+      .backup-stations-btn:hover::before {
+        background: linear-gradient(90deg, transparent, #17a2b8, transparent);
+      }
+
+      /* Responsive design for buttons */
+      @media (max-width: 1024px) {
+        .operation-buttons {
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+        
+        .operation-btn {
+          min-height: auto;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .operation-buttons {
+          gap: 1rem;
+        }
+        
+        .operation-btn {
+          padding: 20px 18px;
+          gap: 15px;
+          align-items: center;
+        }
+        
+        .operation-btn .btn-icon {
+          font-size: 2rem;
+        }
+        
+        .operation-btn .btn-title {
+          font-size: 1rem;
+        }
+        
+        .operation-btn .btn-description {
+          font-size: 0.85rem;
+          -webkit-line-clamp: 2;
+          max-height: 3em;
+        }
       }
     `}</style>
   </div>

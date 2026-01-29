@@ -61,12 +61,6 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# Large GTFS data files (too big for GitHub)
-deutsche-bahn-gtfs/gtfs-files/*.txt
-
-# Keep only sample/small GTFS files
-!deutsche-bahn-gtfs/gtfs-files/sample-*.txt
-
 # Test files
 test-navigation.html
 

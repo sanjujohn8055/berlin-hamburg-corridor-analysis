@@ -34,6 +34,10 @@
             flex-direction: column;
         }
         
+        .spinner-container {
+            margin-bottom: 20px;
+        }
+        
         .loading-spinner {
             width: 40px;
             height: 40px;
@@ -41,15 +45,28 @@
             border-top: 4px solid #4A90E2;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 20px;
         }
         
-        .loading p {
+        .text-container {
+            animation: none !important;
+            transform: none !important;
+        }
+        
+        .text-container p {
             animation: none !important;
             transform: none !important;
             text-align: center;
             color: #666;
             font-size: 16px;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Ensure no rotation is inherited by text elements */
+        .text-container,
+        .text-container * {
+            animation: none !important;
+            transform: none !important;
         }
         
         @keyframes spin {
@@ -62,8 +79,12 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root">
         <div class="loading">
-            <div class="loading-spinner"></div>
-            <p>Loading Berlin-Hamburg Corridor Analysis...</p>
+            <div class="spinner-container">
+                <div class="loading-spinner"></div>
+            </div>
+            <div class="text-container">
+                <p>Loading Berlin-Hamburg Corridor Analysis...</p>
+            </div>
         </div>
     </div>
 </body>

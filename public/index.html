@@ -26,65 +26,99 @@
             min-height: 100vh;
         }
         
-        .loading {
+        .initial-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f5f7fa;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            flex-direction: column;
+            z-index: 9999;
         }
         
-        .spinner-container {
-            margin-bottom: 20px;
-        }
-        
-        .loading-spinner {
+        .spinner-only {
             width: 40px;
             height: 40px;
             border: 4px solid #f3f3f3;
             border-top: 4px solid #4A90E2;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: rotate 1s linear infinite;
+            margin-bottom: 30px;
         }
         
-        .text-container {
-            animation: none !important;
-            transform: none !important;
+        .loading-dots {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
         }
         
-        .text-container p {
-            animation: none !important;
-            transform: none !important;
-            text-align: center;
+        .loading-dots::before {
+            content: '';
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(to right, 
+                #4A90E2 0%, 
+                #4A90E2 25%, 
+                transparent 25%, 
+                transparent 50%, 
+                #4A90E2 50%, 
+                #4A90E2 75%, 
+                transparent 75%, 
+                transparent 100%);
+            background-size: 20px 2px;
+            animation: moveDots 1.5s linear infinite;
+            margin-right: 10px;
+        }
+        
+        .loading-dots::after {
+            content: '';
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(to right, 
+                #4A90E2 0%, 
+                #4A90E2 25%, 
+                transparent 25%, 
+                transparent 50%, 
+                #4A90E2 50%, 
+                #4A90E2 75%, 
+                transparent 75%, 
+                transparent 100%);
+            background-size: 20px 2px;
+            animation: moveDots 1.5s linear infinite reverse;
+            margin-left: 10px;
+        }
+        
+        .static-text {
             color: #666;
             font-size: 16px;
+            text-align: center;
             margin: 0;
             padding: 0;
+            font-weight: 500;
         }
         
-        /* Ensure no rotation is inherited by text elements */
-        .text-container,
-        .text-container * {
-            animation: none !important;
-            transform: none !important;
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes moveDots {
+            0% { background-position: 0 0; }
+            100% { background-position: 20px 0; }
         }
     </style>
 </head>
 <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root">
-        <div class="loading">
-            <div class="spinner-container">
-                <div class="loading-spinner"></div>
-            </div>
-            <div class="text-container">
-                <p>Loading Berlin-Hamburg Corridor Analysis...</p>
-            </div>
+        <div class="initial-loading">
+            <div class="spinner-only"></div>
+            <div class="loading-dots"></div>
+            <div class="static-text">Loading Berlin-Hamburg Corridor Analysis...</div>
         </div>
     </div>
 </body>

@@ -122,9 +122,10 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
   if (loading && stations.length === 0) {
     return (
       <div className="corridor-dashboard loading">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Loading Berlin-Hamburg corridor data...</p>
+        <div className="initial-loading">
+          <div className="spinner-only"></div>
+          <div className="loading-dots"></div>
+          <div className="static-text">Loading Berlin-Hamburg corridor data...</div>
         </div>
       </div>
     );
@@ -511,23 +512,83 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
           justify-content: center;
         }
 
-        .loading-spinner {
-          text-align: center;
+        .initial-loading {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
         }
 
-        .spinner {
+        .spinner-only {
           width: 40px;
           height: 40px;
           border: 4px solid #f3f3f3;
           border-top: 4px solid #4A90E2;
           border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin: 0 auto 20px;
+          animation: rotate 1s linear infinite;
+          margin-bottom: 30px;
         }
 
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        .loading-dots {
+          display: flex;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
+        .loading-dots::before {
+          content: '';
+          width: 60px;
+          height: 2px;
+          background: linear-gradient(to right, 
+            #4A90E2 0%, 
+            #4A90E2 25%, 
+            transparent 25%, 
+            transparent 50%, 
+            #4A90E2 50%, 
+            #4A90E2 75%, 
+            transparent 75%, 
+            transparent 100%);
+          background-size: 20px 2px;
+          animation: moveDots 1.5s linear infinite;
+          margin-right: 10px;
+        }
+
+        .loading-dots::after {
+          content: '';
+          width: 60px;
+          height: 2px;
+          background: linear-gradient(to right, 
+            #4A90E2 0%, 
+            #4A90E2 25%, 
+            transparent 25%, 
+            transparent 50%, 
+            #4A90E2 50%, 
+            #4A90E2 75%, 
+            transparent 75%, 
+            transparent 100%);
+          background-size: 20px 2px;
+          animation: moveDots 1.5s linear infinite reverse;
+          margin-left: 10px;
+        }
+
+        .static-text {
+          color: #666;
+          font-size: 16px;
+          text-align: center;
+          margin: 0;
+          padding: 0;
+          font-weight: 500;
+        }
+
+        @keyframes rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        @keyframes moveDots {
+          0% { background-position: 0 0; }
+          100% { background-position: 20px 0; }
         }
 
         .error-message {

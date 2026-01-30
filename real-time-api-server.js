@@ -153,17 +153,21 @@ function getFallbackTrainData() {
 }
 
 // Berlin-Hamburg corridor station EVAs (European station codes)
-// Updated to reflect 2026 construction impact
+// Core corridor stations (7 main stations)
 const CORRIDOR_EVAS = [
   8011160, // Berlin Hbf
   8010404, // Berlin-Spandau  
   8013456, // Brandenburg(Havel)
-  8010334, // Rathenow (bus replacement during construction)
+  8010334, // Rathenow
   8010316, // Stendal
-  8000152, // Hagenow Land (bus replacement during construction)
-  8000226, // Lüneburg (new ICE stop during construction)
-  8002549, // Hamburg-Harburg (alternative during construction)
+  8000152, // Hagenow Land
   8002548  // Hamburg Hbf
+];
+
+// Additional stations for 2026 construction period (separate from main corridor)
+const CONSTRUCTION_STATIONS = [
+  8000226, // Lüneburg (new ICE stop during construction)
+  8002549  // Hamburg-Harburg (alternative during construction)
 ];
 
 // Alternative/backup stations around the corridor (updated for 2026 construction)

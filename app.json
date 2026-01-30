@@ -1,0 +1,52 @@
+{
+  "name": "Berlin-Hamburg Corridor Analysis",
+  "description": "Real-time railway analysis system for Berlin-Hamburg corridor with live operational data",
+  "repository": "https://github.com/sanjujohn8055/berlin-hamburg-corridor-analysis",
+  "logo": "https://cdn.jsdelivr.net/gh/sanjujohn8055/berlin-hamburg-corridor-analysis/public/favicon.ico",
+  "keywords": [
+    "railway",
+    "corridor",
+    "analysis",
+    "berlin",
+    "hamburg",
+    "infrastructure",
+    "real-time",
+    "deutsche-bahn"
+  ],
+  "image": "heroku/nodejs",
+  "stack": "heroku-22",
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "env": {
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production"
+    },
+    "NPM_CONFIG_PRODUCTION": {
+      "description": "Skip dev dependencies",
+      "value": "false"
+    }
+  },
+  "scripts": {
+    "postdeploy": "echo 'Deployment completed successfully!'"
+  },
+  "environments": {
+    "test": {
+      "scripts": {
+        "test": "npm test"
+      }
+    }
+  },
+  "addons": [],
+  "website": "https://github.com/sanjujohn8055/berlin-hamburg-corridor-analysis",
+  "success_url": "/api/health"
+}

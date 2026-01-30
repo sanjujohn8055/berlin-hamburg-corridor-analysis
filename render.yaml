@@ -1,0 +1,23 @@
+# Render.com deployment configuration
+services:
+  - type: web
+    name: berlin-hamburg-corridor-analysis
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        fromService:
+          type: web
+          name: berlin-hamburg-corridor-analysis
+          property: port
+    healthCheckPath: /api/health
+    autoDeploy: true
+    branch: main
+    rootDir: .
+    
+# Static files are served by the Node.js server
+# No separate static service needed

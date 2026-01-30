@@ -60,16 +60,19 @@ export const AlternativeRoutesPage: React.FC<AlternativeRoutesPageProps> = ({ on
         const routesResponse = await fetch(`/api/routes/8011160/8002548`); // Berlin Hbf to Hamburg Hbf
         if (routesResponse.ok) {
           const routesData = await routesResponse.json();
-          if (routesData.success) {
-            setRoutes(routesData.data || []);
+          if (routesData.success && Array.isArray(routesData.data)) {
+            setRoutes(routesData.data);
+          } else {
+            console.warn('Routes API returned invalid data format');
+            setRoutes([]);
           }
         } else {
           console.warn('Routes API not available, using fallback data');
-          setRoutes([]); // Set empty array instead of failing
+          setRoutes([]);
         }
       } catch (routesError) {
         console.warn('Routes API error:', routesError);
-        setRoutes([]); // Set empty array instead of failing
+        setRoutes([]);
       }
       
       // Fetch backup stations with better error handling
@@ -77,8 +80,11 @@ export const AlternativeRoutesPage: React.FC<AlternativeRoutesPageProps> = ({ on
         const backupResponse = await fetch('/api/backup-stations');
         if (backupResponse.ok) {
           const backupData = await backupResponse.json();
-          if (backupData.success) {
-            setBackupStations(backupData.data || []);
+          if (backupData.success && Array.isArray(backupData.data)) {
+            setBackupStations(backupData.data);
+          } else {
+            console.warn('Backup stations API returned invalid data format');
+            setBackupStations([]);
           }
         } else {
           console.warn('Backup stations API not available');
@@ -91,7 +97,9 @@ export const AlternativeRoutesPage: React.FC<AlternativeRoutesPageProps> = ({ on
       
     } catch (err) {
       console.error('General error in fetchAlternativeData:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      // Don't set error state for API unavailability - just log and continue
+      setRoutes([]);
+      setBackupStations([]);
     } finally {
       setLoading(false);
     }
@@ -234,51 +242,67 @@ export const AlternativeRoutesPage: React.FC<AlternativeRoutesPageProps> = ({ on
             Alternative stations to use when main corridor stations experience severe delays or cancellations.
           </p>
           
-          <div className="backup-grid">
-            {backupStations.map((station) => (
-              <div key={station.eva} className="backup-card">
-                <div className="backup-header">
-                  <h3>{station.name}</h3>
-                  <div className="backup-distance">
-                    {station.distanceFromBerlin}km from Berlin
+          {backupStations.length > 0 ? (
+            <div className="backup-grid">
+              {backupStations.map((station) => (
+                <div key={station.eva} className="backup-card">
+                  <div className="backup-header">
+                    <h3>{station.name}</h3>
+                    <div className="backup-distance">
+                      {station.distanceFromBerlin}km from Berlin
+                    </div>
                   </div>
-                </div>
-                
-                {station.realTimeData && (
-                  <div className="backup-status">
-                    <div className="status-item">
-                      <span className="status-label">Current Delay:</span>
-                      <span className={`status-value delay-${getDelayClass(station.realTimeData.avgDelay)}`}>
-                        {station.realTimeData.avgDelay}min
-                      </span>
-                    </div>
-                    <div className="status-item">
-                      <span className="status-label">Delayed Trains:</span>
-                      <span className="status-value">{station.realTimeData.delayedTrains}</span>
-                    </div>
-                    {station.realTimeData.cancelledTrains > 0 && (
+                  
+                  {station.realTimeData && (
+                    <div className="backup-status">
                       <div className="status-item">
-                        <span className="status-label">Cancellations:</span>
-                        <span className="status-value cancelled">{station.realTimeData.cancelledTrains}</span>
+                        <span className="status-label">Current Delay:</span>
+                        <span className={`status-value delay-${getDelayClass(station.realTimeData.avgDelay)}`}>
+                          {station.realTimeData.avgDelay}min
+                        </span>
                       </div>
+                      <div className="status-item">
+                        <span className="status-label">Delayed Trains:</span>
+                        <span className="status-value">{station.realTimeData.delayedTrains}</span>
+                      </div>
+                      {station.realTimeData.cancelledTrains > 0 && (
+                        <div className="status-item">
+                          <span className="status-label">Cancellations:</span>
+                          <span className="status-value cancelled">{station.realTimeData.cancelledTrains}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  <div className="backup-recommendation">
+                    {station.name.includes('Hbf') ? (
+                      <span className="rec-text">✅ Major hub - Full services available</span>
+                    ) : station.name.includes('Harburg') ? (
+                      <span className="rec-text">🔄 Primary alternative during construction</span>
+                    ) : station.name.includes('Lüneburg') ? (
+                      <span className="rec-text">🆕 New ICE stop during construction</span>
+                    ) : (
+                      <span className="rec-text">🚉 Regional alternative with connections</span>
                     )}
                   </div>
-                )}
-                
-                <div className="backup-recommendation">
-                  {station.name.includes('Hbf') ? (
-                    <span className="rec-text">✅ Major hub - Full services available</span>
-                  ) : station.name.includes('Harburg') ? (
-                    <span className="rec-text">🔄 Primary alternative during construction</span>
-                  ) : station.name.includes('Lüneburg') ? (
-                    <span className="rec-text">🆕 New ICE stop during construction</span>
-                  ) : (
-                    <span className="rec-text">🚉 Regional alternative with connections</span>
-                  )}
                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="no-backup-stations">
+              <p>🔍 Backup station data is being loaded...</p>
+              <p>These stations provide alternative routing during main corridor disruptions.</p>
+              <div className="fallback-stations">
+                <h4>Known Backup Stations:</h4>
+                <ul>
+                  <li><strong>Hamburg-Harburg</strong> - Primary alternative to Hamburg Hbf</li>
+                  <li><strong>Berlin Südkreuz</strong> - Major alternative Berlin terminus</li>
+                  <li><strong>Lüneburg</strong> - New ICE stop during construction</li>
+                  <li><strong>Hamburg-Altona</strong> - Western Hamburg alternative</li>
+                </ul>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Emergency Procedures */}
@@ -588,6 +612,42 @@ export const AlternativeRoutesPage: React.FC<AlternativeRoutesPageProps> = ({ on
           text-align: center;
           padding: 40px;
           color: #666;
+        }
+
+        .no-backup-stations {
+          text-align: center;
+          padding: 40px;
+          color: #666;
+          background: #f8f9fa;
+          border-radius: 8px;
+          border: 1px solid #dee2e6;
+        }
+
+        .fallback-stations {
+          margin-top: 25px;
+          text-align: left;
+          max-width: 500px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .fallback-stations h4 {
+          color: #4A90E2;
+          margin-bottom: 15px;
+        }
+
+        .fallback-stations ul {
+          list-style: none;
+          padding: 0;
+        }
+
+        .fallback-stations li {
+          padding: 8px 0;
+          border-bottom: 1px solid #e9ecef;
+        }
+
+        .fallback-stations li:last-child {
+          border-bottom: none;
         }
 
         .backup-section {

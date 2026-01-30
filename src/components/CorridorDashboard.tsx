@@ -158,7 +158,14 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
               </label>
             </div>
             <button onClick={refresh} className="refresh-button" disabled={loading}>
-              {loading ? 'Refreshing...' : 'Refresh Data'}
+              {loading ? (
+                <span className="refresh-loading">
+                  <span className="refresh-spinner"></span>
+                  Refreshing...
+                </span>
+              ) : (
+                'Refresh Data'
+              )}
             </button>
           </div>
         </div>
@@ -578,6 +585,9 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
           border-radius: 4px;
           cursor: pointer;
           font-size: 14px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
 
         .refresh-button:hover:not(:disabled) {
@@ -587,6 +597,21 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
         .refresh-button:disabled {
           opacity: 0.6;
           cursor: not-allowed;
+        }
+
+        .refresh-loading {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .refresh-spinner {
+          width: 14px;
+          height: 14px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top: 2px solid white;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
         }
 
         .last-updated {
@@ -1358,7 +1383,8 @@ const FacilityItem: React.FC<{ label: string; available: boolean }> = ({ label, 
         overflow: hidden;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         flex: 1;
-        min-height: 120px;
+        min-height: 140px;
+        max-width: calc(33.333% - 1.33rem);
       }
 
       .operation-btn::before {
@@ -1412,9 +1438,10 @@ const FacilityItem: React.FC<{ label: string; available: boolean }> = ({ label, 
         font-weight: 600;
         color: #2c3e50;
         font-size: 1.1rem;
-        margin-bottom: 4px;
+        margin-bottom: 8px;
         transition: color 0.3s ease;
         line-height: 1.3;
+        white-space: nowrap;
       }
 
       .operation-btn .btn-description {
@@ -1428,6 +1455,8 @@ const FacilityItem: React.FC<{ label: string; available: boolean }> = ({ label, 
         overflow: hidden;
         text-overflow: ellipsis;
         max-height: 4.5em;
+        hyphens: auto;
+        word-wrap: break-word;
       }
 
       .operation-btn:hover .btn-title {
@@ -1487,6 +1516,7 @@ const FacilityItem: React.FC<{ label: string; available: boolean }> = ({ label, 
         
         .operation-btn {
           min-height: auto;
+          max-width: none;
         }
       }
 
@@ -1499,6 +1529,7 @@ const FacilityItem: React.FC<{ label: string; available: boolean }> = ({ label, 
           padding: 20px 18px;
           gap: 15px;
           align-items: center;
+          min-height: 100px;
         }
         
         .operation-btn .btn-icon {

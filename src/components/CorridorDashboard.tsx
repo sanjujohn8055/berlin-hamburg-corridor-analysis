@@ -34,6 +34,7 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
   const [alternativeRoutes, setAlternativeRoutes] = useState<any[]>([]);
   const [backupStations, setBackupStations] = useState<any[]>([]);
   const [loadingRoutes, setLoadingRoutes] = useState(false);
+  const [manualRefreshing, setManualRefreshing] = useState(false); // Track manual refresh separately
 
   const corridorStats = getCorridorStats();
   const topPriorityStations = getStationsByPriority(60);
@@ -70,6 +71,16 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
       console.error('Error fetching alternative data:', error);
     } finally {
       setLoadingRoutes(false);
+    }
+  };
+
+  // Manual refresh handler
+  const handleManualRefresh = async () => {
+    setManualRefreshing(true);
+    try {
+      await refresh();
+    } finally {
+      setManualRefreshing(false);
     }
   };
 
@@ -157,8 +168,8 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
                 <span>Risk Zones</span>
               </label>
             </div>
-            <button onClick={refresh} className="refresh-button" disabled={loading}>
-              {loading ? (
+            <button onClick={handleManualRefresh} className="refresh-button" disabled={manualRefreshing}>
+              {manualRefreshing ? (
                 <span className="refresh-loading">
                   <span className="refresh-spinner"></span>
                   Refreshing...

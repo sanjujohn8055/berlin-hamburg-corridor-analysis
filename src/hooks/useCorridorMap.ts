@@ -49,9 +49,12 @@ export const useCorridorMap = ({
   /**
    * Fetches corridor station data from the API
    */
-  const fetchStations = useCallback(async () => {
+  const fetchStations = useCallback(async (isManualRefresh = false) => {
     try {
-      setState(prev => ({ ...prev, loading: true, error: null }));
+      // Only show loading spinner for initial load or manual refresh
+      if (state.stations.length === 0 || isManualRefresh) {
+        setState(prev => ({ ...prev, loading: true, error: null }));
+      }
 
       // Use the station data service to get data with source information
       const result = await stationDataService.fetchStations();
@@ -72,7 +75,7 @@ export const useCorridorMap = ({
         error: error instanceof Error ? error.message : 'Unknown error occurred'
       }));
     }
-  }, [stationDataService]);
+  }, [stationDataService, state.stations.length]);
 
   /**
    * Selects a station
@@ -99,7 +102,7 @@ export const useCorridorMap = ({
    * Refreshes station data
    */
   const refresh = useCallback(() => {
-    fetchStations();
+    return fetchStations(true); // Pass true to indicate manual refresh
   }, [fetchStations]);
 
   /**
@@ -142,15 +145,15 @@ export const useCorridorMap = ({
 
   // Auto-refresh effect
   useEffect(() => {
-    fetchStations();
+    fetchStations(true); // Initial load with loading spinner
 
     if (autoRefresh) {
-      const interval = setInterval(fetchStations, refreshInterval);
+      const interval = setInterval(() => fetchStations(false), refreshInterval); // Auto-refresh without loading spinner
       return () => clearInterval(interval);
     }
     
     return undefined; // Explicit return for non-cleanup case
-  }, [fetchStations, autoRefresh, refreshInterval]);
+  }, [autoRefresh, refreshInterval]); // Removed fetchStations from dependencies to prevent recreation
 
   return {
     // State

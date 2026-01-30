@@ -4,78 +4,124 @@ exports.handler = async (event, context) => {
   const from = pathSegments[pathSegments.length - 2];
   const to = pathSegments[pathSegments.length - 1];
 
+  // Handle the case where the path might be /api/routes/from/to or /.netlify/functions/routes/from/to
+  let fromEva = from;
+  let toEva = to;
+  
+  // If the path doesn't contain the EVA numbers, use defaults
+  if (!from || !to || from === 'routes') {
+    fromEva = '8011160'; // Berlin Hbf
+    toEva = '8002548';   // Hamburg Hbf
+  }
+
   const alternativeRoutes = {
     success: true,
-    data: {
-      requestedRoute: `${from} → ${to}`,
-      primaryRoute: {
-        name: "Direct ICE Route",
-        duration: "1h 40min",
-        status: "Normal operations",
-        trains: ["ICE 18", "ICE 23", "ICE 28"],
-        frequency: "Every 30 minutes"
-      },
-      alternativeRoutes: [
-        {
-          name: "Via Lüneburg (2026 Construction Route)",
-          duration: "2h 25min",
-          status: "Construction alternative",
-          description: "Primary alternative during 2026 construction period",
-          route: "Berlin → Lüneburg → Hamburg-Harburg → Hamburg",
-          advantages: [
-            "🚄 Maintains ICE service level",
-            "🎯 Reliable during construction period",
-            "🚊 Good connections at Hamburg-Harburg"
-          ],
-          limitations: [
-            "⏰ +45 minutes journey time",
-            "🔄 Reduced frequency (hourly instead of 30min)",
-            "🚌 Bus replacement for some sections"
-          ]
-        },
-        {
-          name: "Regional + S-Bahn Combination",
-          duration: "3h 15min",
-          status: "Always available",
-          description: "Flexible alternative using regional services",
-          route: "Berlin → Regional trains → Hamburg with S-Bahn connections",
-          advantages: [
-            "💰 Lower cost option",
-            "🔄 Multiple departure times",
-            "🚊 Excellent local connections"
-          ],
-          limitations: [
-            "⏰ Significantly longer journey",
-            "🔄 Multiple transfers required",
-            "🎫 Separate tickets may be needed"
-          ]
-        },
-        {
-          name: "Bus + Rail Hybrid",
-          duration: "4h 30min",
-          status: "Emergency backup",
-          description: "Last resort option during major disruptions",
-          route: "Bus connections + regional rail where available",
-          advantages: [
-            "🚌 Available during complete rail closure",
-            "🎯 Guaranteed transport option",
-            "💺 Comfortable bus services"
-          ],
-          limitations: [
-            "⏰ Very long journey time",
-            "🌦️ Weather dependent",
-            "🎫 Complex ticketing"
-          ]
+    data: [
+      {
+        legs: [
+          {
+            line: {
+              name: "ICE 18",
+              product: "ICE"
+            },
+            origin: {
+              name: "Berlin Hbf"
+            },
+            destination: {
+              name: "Hamburg Hbf"
+            },
+            departure: "08:00",
+            arrival: "09:40",
+            duration: 100
+          }
+        ],
+        duration: 100,
+        price: {
+          amount: 49.90,
+          currency: "EUR"
         }
-      ],
-      emergencyProcedures: [
-        "🚨 Check DB Navigator app for real-time updates",
-        "📱 Enable push notifications for route changes",
-        "🎫 Consider flexible ticket options",
-        "⏰ Allow extra 60-90 minutes during disruptions"
-      ]
-    },
+      },
+      {
+        legs: [
+          {
+            line: {
+              name: "ICE 23",
+              product: "ICE"
+            },
+            origin: {
+              name: "Berlin Hbf"
+            },
+            destination: {
+              name: "Hamburg-Harburg"
+            },
+            departure: "09:30",
+            arrival: "11:45",
+            duration: 135
+          },
+          {
+            line: {
+              name: "S3",
+              product: "S-Bahn"
+            },
+            origin: {
+              name: "Hamburg-Harburg"
+            },
+            destination: {
+              name: "Hamburg Hbf"
+            },
+            departure: "11:50",
+            arrival: "12:10",
+            duration: 20
+          }
+        ],
+        duration: 155,
+        price: {
+          amount: 49.90,
+          currency: "EUR"
+        }
+      },
+      {
+        legs: [
+          {
+            line: {
+              name: "RE 1",
+              product: "Regional"
+            },
+            origin: {
+              name: "Berlin Hbf"
+            },
+            destination: {
+              name: "Lüneburg"
+            },
+            departure: "10:15",
+            arrival: "12:30",
+            duration: 135
+          },
+          {
+            line: {
+              name: "RE 3",
+              product: "Regional"
+            },
+            origin: {
+              name: "Lüneburg"
+            },
+            destination: {
+              name: "Hamburg Hbf"
+            },
+            departure: "12:45",
+            arrival: "13:30",
+            duration: 45
+          }
+        ],
+        duration: 195,
+        price: {
+          amount: 29.90,
+          currency: "EUR"
+        }
+      }
+    ],
     metadata: {
+      requestedRoute: `${fromEva} → ${toEva}`,
       lastUpdated: new Date().toISOString(),
       dataSource: "Deutsche Bahn Route Planning + Construction Analysis",
       constructionPeriod: "August 2025 - April 2026"

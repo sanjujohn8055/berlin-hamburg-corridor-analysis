@@ -55,13 +55,24 @@ export const AlternativeRoutesPage: React.FC<AlternativeRoutesPageProps> = ({ on
       setLoading(true);
       setError(null);
       
+      // Initialize with empty arrays to prevent undefined errors
+      setRoutes([]);
+      setBackupStations([]);
+      
       // Fetch alternative routes with better error handling
       try {
         const routesResponse = await fetch(`/api/routes/8011160/8002548`); // Berlin Hbf to Hamburg Hbf
         if (routesResponse.ok) {
           const routesData = await routesResponse.json();
           if (routesData.success && Array.isArray(routesData.data)) {
-            setRoutes(routesData.data);
+            // Validate route data structure before setting
+            const validRoutes = routesData.data.filter((route: any) => 
+              route && 
+              typeof route === 'object' && 
+              Array.isArray(route.legs) &&
+              typeof route.duration === 'number'
+            );
+            setRoutes(validRoutes);
           } else {
             console.warn('Routes API returned invalid data format');
             setRoutes([]);
@@ -81,7 +92,14 @@ export const AlternativeRoutesPage: React.FC<AlternativeRoutesPageProps> = ({ on
         if (backupResponse.ok) {
           const backupData = await backupResponse.json();
           if (backupData.success && Array.isArray(backupData.data)) {
-            setBackupStations(backupData.data);
+            // Validate backup station data structure
+            const validStations = backupData.data.filter((station: any) =>
+              station &&
+              typeof station === 'object' &&
+              station.name &&
+              typeof station.eva === 'number'
+            );
+            setBackupStations(validStations);
           } else {
             console.warn('Backup stations API returned invalid data format');
             setBackupStations([]);
@@ -120,9 +138,10 @@ export const AlternativeRoutesPage: React.FC<AlternativeRoutesPageProps> = ({ on
   if (loading) {
     return (
       <div className="alternative-routes-page loading">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Loading alternative routes...</p>
+        <div className="initial-loading">
+          <div className="spinner-only"></div>
+          <div className="loading-dots"></div>
+          <div className="static-text">Loading alternative routes data...</div>
         </div>
       </div>
     );
@@ -195,25 +214,25 @@ export const AlternativeRoutesPage: React.FC<AlternativeRoutesPageProps> = ({ on
                 <div key={index} className="route-card">
                   <div className="route-header">
                     <span className="route-number">Route {index + 1}</span>
-                    <span className="route-duration">{formatDuration(route.duration)}</span>
+                    <span className="route-duration">{formatDuration(route.duration || 0)}</span>
                   </div>
                   
                   <div className="route-legs">
-                    {route.legs.map((leg, legIndex) => (
+                    {route.legs && route.legs.map((leg, legIndex) => (
                       <div key={legIndex} className="route-leg">
                         <div className="leg-info">
-                          <span className="leg-line">{leg.line.name}</span>
-                          <span className="leg-product">{leg.line.product}</span>
+                          <span className="leg-line">{leg.line?.name || 'Unknown Line'}</span>
+                          <span className="leg-product">{leg.line?.product || 'Train'}</span>
                         </div>
                         <div className="leg-stations">
-                          <span className="origin">{leg.origin.name}</span>
+                          <span className="origin">{leg.origin?.name || 'Unknown Origin'}</span>
                           <span className="arrow">→</span>
-                          <span className="destination">{leg.destination.name}</span>
+                          <span className="destination">{leg.destination?.name || 'Unknown Destination'}</span>
                         </div>
                         <div className="leg-times">
-                          <span>{leg.departure}</span>
+                          <span>{leg.departure || '--:--'}</span>
                           <span>-</span>
-                          <span>{leg.arrival}</span>
+                          <span>{leg.arrival || '--:--'}</span>
                         </div>
                       </div>
                     ))}
@@ -228,9 +247,89 @@ export const AlternativeRoutesPage: React.FC<AlternativeRoutesPageProps> = ({ on
               ))}
             </div>
           ) : (
-            <div className="no-routes">
-              <p>🔍 Alternative routes are being calculated...</p>
-              <p>During construction, consider these backup options below.</p>
+            <div className="fallback-routes">
+              <h3>🚄 Standard Route Options</h3>
+              <p>Live route data is being loaded. Here are the standard alternatives:</p>
+              
+              <div className="routes-grid">
+                <div className="route-card">
+                  <div className="route-header">
+                    <span className="route-number">Direct ICE</span>
+                    <span className="route-duration">1h 40min</span>
+                  </div>
+                  <div className="route-legs">
+                    <div className="route-leg">
+                      <div className="leg-info">
+                        <span className="leg-line">ICE 18/23/28</span>
+                        <span className="leg-product">ICE</span>
+                      </div>
+                      <div className="leg-stations">
+                        <span className="origin">Berlin Hbf</span>
+                        <span className="arrow">→</span>
+                        <span className="destination">Hamburg Hbf</span>
+                      </div>
+                      <div className="leg-times">
+                        <span>Every 30min</span>
+                        <span>-</span>
+                        <span>Normal ops</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="route-price">From 49.90 EUR</div>
+                </div>
+
+                <div className="route-card">
+                  <div className="route-header">
+                    <span className="route-number">Construction Route</span>
+                    <span className="route-duration">2h 25min</span>
+                  </div>
+                  <div className="route-legs">
+                    <div className="route-leg">
+                      <div className="leg-info">
+                        <span className="leg-line">ICE via Lüneburg</span>
+                        <span className="leg-product">ICE</span>
+                      </div>
+                      <div className="leg-stations">
+                        <span className="origin">Berlin Hbf</span>
+                        <span className="arrow">→</span>
+                        <span className="destination">Hamburg-Harburg</span>
+                      </div>
+                      <div className="leg-times">
+                        <span>2026 Route</span>
+                        <span>-</span>
+                        <span>+45min</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="route-price">From 49.90 EUR</div>
+                </div>
+
+                <div className="route-card">
+                  <div className="route-header">
+                    <span className="route-number">Regional Option</span>
+                    <span className="route-duration">3h 15min</span>
+                  </div>
+                  <div className="route-legs">
+                    <div className="route-leg">
+                      <div className="leg-info">
+                        <span className="leg-line">RE + Regional</span>
+                        <span className="leg-product">Regional</span>
+                      </div>
+                      <div className="leg-stations">
+                        <span className="origin">Berlin Hbf</span>
+                        <span className="arrow">→</span>
+                        <span className="destination">Hamburg Hbf</span>
+                      </div>
+                      <div className="leg-times">
+                        <span>Multiple</span>
+                        <span>-</span>
+                        <span>Transfers</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="route-price">From 29.90 EUR</div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -354,6 +453,85 @@ export const AlternativeRoutesPage: React.FC<AlternativeRoutesPageProps> = ({ on
           display: flex;
           align-items: center;
           justify-content: center;
+        }
+
+        .initial-loading {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+        }
+
+        .spinner-only {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #4A90E2;
+          border-radius: 50%;
+          animation: rotate 1s linear infinite;
+          margin-bottom: 30px;
+        }
+
+        .loading-dots {
+          display: flex;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
+        .loading-dots::before {
+          content: '';
+          width: 60px;
+          height: 2px;
+          background: linear-gradient(to right, 
+            #4A90E2 0%, 
+            #4A90E2 25%, 
+            transparent 25%, 
+            transparent 50%, 
+            #4A90E2 50%, 
+            #4A90E2 75%, 
+            transparent 75%, 
+            transparent 100%);
+          background-size: 20px 2px;
+          animation: moveDots 1.5s linear infinite;
+          margin-right: 10px;
+        }
+
+        .loading-dots::after {
+          content: '';
+          width: 60px;
+          height: 2px;
+          background: linear-gradient(to right, 
+            #4A90E2 0%, 
+            #4A90E2 25%, 
+            transparent 25%, 
+            transparent 50%, 
+            #4A90E2 50%, 
+            #4A90E2 75%, 
+            transparent 75%, 
+            transparent 100%);
+          background-size: 20px 2px;
+          animation: moveDots 1.5s linear infinite reverse;
+          margin-left: 10px;
+        }
+
+        .static-text {
+          color: #666;
+          font-size: 16px;
+          text-align: center;
+          margin: 0;
+          padding: 0;
+          font-weight: 500;
+        }
+
+        @keyframes rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        @keyframes moveDots {
+          0% { background-position: 0 0; }
+          100% { background-position: 20px 0; }
         }
 
         .loading-spinner {
@@ -612,6 +790,21 @@ export const AlternativeRoutesPage: React.FC<AlternativeRoutesPageProps> = ({ on
           text-align: center;
           padding: 40px;
           color: #666;
+        }
+
+        .fallback-routes {
+          text-align: center;
+          padding: 20px;
+        }
+
+        .fallback-routes h3 {
+          color: #4A90E2;
+          margin-bottom: 15px;
+        }
+
+        .fallback-routes p {
+          color: #666;
+          margin-bottom: 25px;
         }
 
         .no-backup-stations {

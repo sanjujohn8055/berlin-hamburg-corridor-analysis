@@ -53,9 +53,10 @@ export const DelayAnalysisPage: React.FC<DelayAnalysisPageProps> = ({ onBack }) 
   if (loading) {
     return (
       <div className="delay-analysis-page loading">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Loading delay analysis...</p>
+        <div className="initial-loading">
+          <div className="spinner-only"></div>
+          <div className="loading-dots"></div>
+          <div className="static-text">Loading delay analysis data...</div>
         </div>
       </div>
     );
@@ -193,6 +194,85 @@ export const DelayAnalysisPage: React.FC<DelayAnalysisPageProps> = ({ onBack }) 
           display: flex;
           align-items: center;
           justify-content: center;
+        }
+
+        .initial-loading {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+        }
+
+        .spinner-only {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #4A90E2;
+          border-radius: 50%;
+          animation: rotate 1s linear infinite;
+          margin-bottom: 30px;
+        }
+
+        .loading-dots {
+          display: flex;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
+        .loading-dots::before {
+          content: '';
+          width: 60px;
+          height: 2px;
+          background: linear-gradient(to right, 
+            #4A90E2 0%, 
+            #4A90E2 25%, 
+            transparent 25%, 
+            transparent 50%, 
+            #4A90E2 50%, 
+            #4A90E2 75%, 
+            transparent 75%, 
+            transparent 100%);
+          background-size: 20px 2px;
+          animation: moveDots 1.5s linear infinite;
+          margin-right: 10px;
+        }
+
+        .loading-dots::after {
+          content: '';
+          width: 60px;
+          height: 2px;
+          background: linear-gradient(to right, 
+            #4A90E2 0%, 
+            #4A90E2 25%, 
+            transparent 25%, 
+            transparent 50%, 
+            #4A90E2 50%, 
+            #4A90E2 75%, 
+            transparent 75%, 
+            transparent 100%);
+          background-size: 20px 2px;
+          animation: moveDots 1.5s linear infinite reverse;
+          margin-left: 10px;
+        }
+
+        .static-text {
+          color: #666;
+          font-size: 16px;
+          text-align: center;
+          margin: 0;
+          padding: 0;
+          font-weight: 500;
+        }
+
+        @keyframes rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        @keyframes moveDots {
+          0% { background-position: 0 0; }
+          100% { background-position: 20px 0; }
         }
 
         .loading-spinner {

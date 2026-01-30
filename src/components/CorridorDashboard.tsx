@@ -768,34 +768,6 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
           font-size: 14px;
         }
 
-        .refresh-button {
-          padding: 8px 16px;
-          background: #4A90E2;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 14px;
-        }
-
-        .refresh-button:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .last-updated {
-          text-align: center;
-          font-size: 12px;
-          color: #666;
-          margin-top: 10px;
-        }
-
-        .dashboard-content {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 20px;
-        }
-
         .stats-panel {
           display: flex;
           gap: 20px;
@@ -1289,12 +1261,6 @@ const FacilityItem: React.FC<{ label: string; available: boolean }> = ({ label, 
         margin-bottom: 10px;
         flex-wrap: wrap;
         gap: 10px;
-      }
-
-      .station-name {
-        font-weight: bold;
-        color: #333;
-        flex-shrink: 0;
       }
 
       .alternative-stations-label {

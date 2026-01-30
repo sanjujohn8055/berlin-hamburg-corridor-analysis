@@ -3,6 +3,9 @@
 A comprehensive real-time railway analysis system for the Berlin-Hamburg corridor, featuring live operational data, professional navigation pages, and alternative routing during the 2026 construction period.
 
 ## 🎯 Project Overview
+Berlin–Hamburg Corridor Real‑Time Analysis System is a full‑stack web application that analyzes the 289 km high‑speed corridor between Berlin Hbf and Hamburg Hbf using authentic Deutsche Bahn GTFS data and live API feeds.
+It provides a professional, operations‑oriented view of the corridor, including real‑time delay monitoring, construction impact analysis for the 2025–2026 full closure, and alternative route recommendations via key nodes such as Stendal, Lüneburg, and Hamburg‑Harburg.
+The system is built with React, TypeScript, Node.js, and Express, and is designed to handle real‑world DB data quality issues through resilient API integration, caching, and simulated fallback data.
 
 This system analyzes the critical 289km Berlin-Hamburg railway corridor, integrating authentic Deutsche Bahn GTFS data with live API feeds to provide:
 

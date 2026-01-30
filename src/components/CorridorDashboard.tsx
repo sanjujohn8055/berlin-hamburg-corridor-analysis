@@ -354,6 +354,9 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
                         <div key={station.eva} className="station-status-item">
                           <div className="station-status-header">
                             <span className="station-name">{station.name}</span>
+                            <div className="alternative-stations-label">
+                              Alternative Stations for Congestion Relief
+                            </div>
                             <div className="status-indicators">
                               <span className={`delay-indicator ${getDelayClass(station.realTimeData?.avgDelay || 0)}`}>
                                 {station.realTimeData?.avgDelay || 0}min
@@ -1284,17 +1287,31 @@ const FacilityItem: React.FC<{ label: string; available: boolean }> = ({ label, 
         justify-content: space-between;
         align-items: center;
         margin-bottom: 10px;
+        flex-wrap: wrap;
+        gap: 10px;
       }
 
       .station-name {
         font-weight: bold;
         color: #333;
+        flex-shrink: 0;
+      }
+
+      .alternative-stations-label {
+        font-size: 12px;
+        color: #4A90E2;
+        font-style: italic;
+        font-weight: 500;
+        flex-grow: 1;
+        text-align: center;
+        padding: 0 10px;
       }
 
       .status-indicators {
         display: flex;
         gap: 10px;
         align-items: center;
+        flex-shrink: 0;
       }
 
       .delay-indicator {

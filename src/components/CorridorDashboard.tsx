@@ -172,7 +172,7 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
               {manualRefreshing ? (
                 <span className="refresh-loading">
                   <span className="refresh-spinner"></span>
-                  Refreshing...
+                  <span className="refresh-text">Refreshing...</span>
                 </span>
               ) : (
                 'Refresh Data'
@@ -623,6 +623,18 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
           border-top: 2px solid white;
           border-radius: 50%;
           animation: spin 1s linear infinite;
+          flex-shrink: 0; /* Prevent spinner from shrinking */
+        }
+
+        .refresh-text {
+          animation: none !important;
+          transform: none !important;
+        }
+
+        /* Ensure text doesn't inherit any rotation */
+        .refresh-loading > span:not(.refresh-spinner) {
+          animation: none !important;
+          transform: none !important;
         }
 
         .last-updated {

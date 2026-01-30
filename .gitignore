@@ -64,6 +64,9 @@ jspm_packages/
 # Test files
 test-navigation.html
 
+# Production packages
+*.zip
+
 # Temporary files
 *.tmp
 *.temp

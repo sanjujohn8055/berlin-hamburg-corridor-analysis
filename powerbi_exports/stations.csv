@@ -1,0 +1,8 @@
+"eva","name","distanceFromBerlinKm","lat","lon","stationType","platformCount","hasDBLounge","hasTravelCenter","hasWifi","accessibilityLevel","isHub","avgDelayMinutes","delayedTrains","cancelledTrains","lastUpdated"
+"8011160","Berlin Hbf","0","52.525589","13.369545","Major Hub","12","true","true","true","yes","true","60","32","5","2026-02-03T13:54:29.493Z"
+"8010404","Berlin-Spandau","15","52.534722","13.19754","Regional","4","false","true","true","partial","false","60","30","0","2026-02-03T13:54:30.762Z"
+"8013456","Brandenburg(Havel)","70","52.411111","12.560556","Regional","4","false","true","true","partial","false","60","8","0","2026-02-03T13:54:31.487Z"
+"8010334","Rathenow","95","52.603889","12.403889","Regional","4","false","true","true","partial","false","60","6","1","2026-02-03T13:54:32.278Z"
+"8010316","Stendal","140","52.605556","11.858333","Regional","4","false","true","true","partial","false","4","11","0","2026-02-03T13:54:32.872Z"
+"8000152","Hagenow Land","180","53.425556","11.186944","Regional","4","false","true","true","partial","false","60","53","5","2026-02-03T13:54:34.340Z"
+"8002548","Hamburg Hbf","289","53.552778","10.006389","Major Hub","12","true","true","true","yes","true","60","39","1","2026-02-03T13:54:35.384Z"

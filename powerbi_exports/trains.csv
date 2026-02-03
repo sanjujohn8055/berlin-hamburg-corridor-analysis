@@ -1,0 +1,6 @@
+"trainNumber","serviceType","originStation","destinationStation","plannedDeparture","plannedArrival","direction","isConstructionRoute","isAlternativeRoute"
+"ICE 518","Unknown","Unknown Origin","Unknown Destination","","","Unknown","false","false"
+"ICE 520","Unknown","Unknown Origin","Unknown Destination","","","Unknown","false","false"
+"ICE 723","Unknown","Unknown Origin","Unknown Destination","","","Unknown","false","false"
+"ICE 828","Unknown","Unknown Origin","Unknown Destination","","","Unknown","false","false"
+"RE 1","Unknown","Unknown Origin","Unknown Destination","","","Unknown","false","false"

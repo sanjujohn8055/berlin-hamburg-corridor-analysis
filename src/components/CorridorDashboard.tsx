@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CorridorMap } from './CorridorMap';
+import { CorridorAnalytics } from './CorridorAnalytics';
 import { useCorridorMap } from '../hooks/useCorridorMap';
 import { CorridorStation } from '../shared/types';
 import { StationDataService } from '../services/StationDataService';
@@ -30,7 +31,7 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
     getCorridorStats
   } = useCorridorMap({ autoRefresh: true, refreshInterval: 30000 }); // Refresh every 30 seconds for real-time
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'priorities' | 'details' | 'realtime'>('realtime');
+  const [activeTab, setActiveTab] = useState<'overview' | 'priorities' | 'details' | 'realtime' | 'analytics'>('realtime');
   const [loadingRoutes, setLoadingRoutes] = useState(false);
   const [manualRefreshing, setManualRefreshing] = useState(false); // Track manual refresh separately
 
@@ -304,6 +305,12 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
               🔴 Real-Time
             </button>
             <button
+              className={`tab-button ${activeTab === 'analytics' ? 'active' : ''}`}
+              onClick={() => setActiveTab('analytics')}
+            >
+              📊 Analytics
+            </button>
+            <button
               className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
               onClick={() => setActiveTab('overview')}
             >
@@ -517,6 +524,12 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'analytics' && (
+              <div className="analytics-panel">
+                <CorridorAnalytics stations={stations} />
               </div>
             )}
 

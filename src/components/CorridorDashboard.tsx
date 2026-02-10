@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CorridorMap } from './CorridorMap';
 import { CorridorAnalytics } from './CorridorAnalytics';
 import { StationSearch } from './StationSearch';
+import { PerformanceMonitor } from './PerformanceMonitor';
 import { useCorridorMap } from '../hooks/useCorridorMap';
 import { CorridorStation } from '../shared/types';
 import { StationDataService } from '../services/StationDataService';
@@ -32,7 +33,7 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
     getCorridorStats
   } = useCorridorMap({ autoRefresh: true, refreshInterval: 30000 }); // Refresh every 30 seconds for real-time
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'priorities' | 'details' | 'realtime' | 'analytics' | 'search'>('realtime');
+  const [activeTab, setActiveTab] = useState<'overview' | 'priorities' | 'details' | 'realtime' | 'analytics' | 'search' | 'performance'>('realtime');
   const [loadingRoutes, setLoadingRoutes] = useState(false);
   const [manualRefreshing, setManualRefreshing] = useState(false); // Track manual refresh separately
 
@@ -318,6 +319,12 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
               📊 Analytics
             </button>
             <button
+              className={`tab-button ${activeTab === 'performance' ? 'active' : ''}`}
+              onClick={() => setActiveTab('performance')}
+            >
+              ⚡ Performance
+            </button>
+            <button
               className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
               onClick={() => setActiveTab('overview')}
             >
@@ -543,6 +550,12 @@ export const CorridorDashboard: React.FC<CorridorDashboardProps> = ({ onNavigate
             {activeTab === 'analytics' && (
               <div className="analytics-panel">
                 <CorridorAnalytics stations={stations} />
+              </div>
+            )}
+
+            {activeTab === 'performance' && (
+              <div className="performance-panel">
+                <PerformanceMonitor />
               </div>
             )}
 
